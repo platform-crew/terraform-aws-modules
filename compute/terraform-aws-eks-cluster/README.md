@@ -1,56 +1,131 @@
-# EKS Cluster Terraform Module
 
-This Terraform configuration provisions an AWS EKS cluster along with a managed node group. It supports optional launch templates, spot instances, and autoscaling.
+# AWS EKS Cluster Terraform Module
 
----
+## Overview
+This Terraform module provisions a production-ready AWS EKS (Elastic Kubernetes Service) cluster with all essential components including worker nodes, ALB controller, cluster autoscaler, and RBAC integration.
 
 ## Features
+- **Managed EKS Cluster**: Fully configured Kubernetes control plane
+- **Worker Node Groups**: Auto-scaling groups with spot instance support
+- **AWS ALB Controller**: For ingress management with IAM Roles for Service Accounts (IRSA)
+- **Cluster Autoscaler**: Automatic node scaling based on workload
+- **VPC CNI Networking**: AWS VPC Container Network Interface
+- **Metrics Server**: Cluster metrics collection
+- **RBAC Integration**: IAM role to Kubernetes role mapping
+- **OIDC Provider**: Secure service account authentication
 
-- Creates an EKS cluster
-- Creates a managed node group with configurable instance types
-- Supports on-demand and spot instances (`capacity_type`)
-- Optional launch template support for node groups
-- Autoscaling enabled with tags for Cluster Autoscaler
-- IAM roles and policies attached for worker nodes
-- Configurable scaling parameters for node group size
-
----
-
-## Variables
-
-| Name                   | Type     | Default   | Description                                                   |
-|------------------------|----------|-----------|---------------------------------------------------------------|
-| `cluster_name`         | `string` |           | Name of the EKS cluster                                       |                                       |
-| `node_role_arn`        | `string` |           | ARN of the IAM role for the node group                        |
-| `subnet_ids`           | `list`   |           | List of subnet IDs where nodes will be deployed               |
-| `node_instance_types`  | `list`   | `["t3.medium"]` | List of EC2 instance types for nodes                         |
-| `node_capacity_type`   | `string` | `"ON_DEMAND"` | Capacity type for node group. Use `"SPOT"` for spot instances |
-| `desired_node_size`    | `number` |           | Desired number of nodes in the node group                     |
-| `max_node_size`        | `number` |           | Maximum number of nodes in the node group                     |
-| `min_node_size`        | `number` |           | Minimum number of nodes in the node group                     |
-| `launch_template_id`   | `string` | `""`      | (Optional) Launch template ID for node group                  |
-| `launch_template_version` | `string` | `"$Latest"` | Version of the launch template                               |
-| `environment`          | `string` |           | Environment tag (e.g., dev, staging, prod)                    |
-
----
+## Requirements
+- Terraform >= 1.12.1
+- AWS Provider >= 5.0
+- Kubernetes Provider >= 2.37
+- Helm Provider >= 2.17
+- AWS CLI configured with proper credentials
+- kubectl
+- helm
 
 ## Usage
-
 ```hcl
-module "eks" {
-  source = "./path_to_your_module"
+module "eks_cluster" {
+  source = "./path/to/module"
 
-  cluster_name           = "my-eks-cluster"
-  node_role_arn          = aws_iam_role.eks_node_role.arn
-  subnet_ids             = ["subnet-xxxxxx", "subnet-yyyyyy"]
-  node_instance_types    = ["t3.medium"]
-  node_capacity_type     = "ON_DEMAND" # or "SPOT"
-  desired_node_size      = 2
-  max_node_size          = 3
-  min_node_size          = 1
-  environment            = "dev"
+  region          = "us-west-2"
+  environment     = "production"
+  cluster_name    = "my-eks-cluster"
+  vpc_id          = "vpc-12345678"
+  subnet_ids      = ["subnet-123456", "subnet-234567"]
 
-  # Optional launch template
-  launch_template_id       = ""       # e.g. "lt-0abcd1234efgh5678"
-  launch_template_version  = "$Latest"
+  kubernetes_version              = "1.27"
+  alb_controller_chart_version    = "1.5.3"
+  cluster_autoscaler_chart_version = "9.28.0"
+  vpc_cni_addon_version           = "v1.14.0-eksbuild.1"
+
+  desired_node_size = 3
+  min_node_size     = 1
+  max_node_size     = 5
 }
+```
+
+## Input Variables
+
+### Required Variables
+| Name | Description | Type |
+|------|-------------|------|
+| region | AWS region | string |
+| cluster_name | EKS cluster name | string |
+| vpc_id | VPC ID for EKS | string |
+| subnet_ids | List of subnet IDs | list(string) |
+| kubernetes_version | Kubernetes version | string |
+
+### Optional Variables
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| environment | Environment tag | string | "dev" |
+| endpoint_private_access | Private API endpoint | bool | false |
+| endpoint_public_access | Public API endpoint | bool | true |
+| public_access_cidrs | Allowed CIDRs for public endpoint | list(string) | ["0.0.0.0/0"] |
+| node_instance_types | Worker node instance types | list(string) | ["t3.medium"] |
+| node_capacity_type | SPOT or ON_DEMAND | string | "SPOT" |
+| namespace | Kubernetes namespace for components | string | "kube-system" |
+
+## Outputs
+| Name | Description |
+|------|-------------|
+| eks_cluster_name | EKS cluster name |
+| eks_cluster_endpoint | Kubernetes API endpoint |
+| eks_cluster_arn | EKS cluster ARN |
+| cluster_security_group_id | Control plane security group ID |
+
+## Module Components
+
+### 1. IAM Roles
+- EKS cluster role
+- Node group role
+- ALB controller role (IRSA)
+- Cluster autoscaler role (IRSA)
+- VPC CNI role (IRSA)
+
+### 2. EKS Cluster
+- Control plane with configurable API endpoint access
+- OIDC provider for IRSA
+- Kubernetes network configuration
+
+### 3. Node Groups
+- Auto-scaling worker nodes
+- Configurable instance types
+- Spot instance support
+- Launch template support
+
+### 4. Add-ons
+- AWS Load Balancer Controller (Helm)
+- Cluster Autoscaler (Helm)
+- VPC CNI (Managed Add-on)
+- Metrics Server (Helm)
+
+### 5. RBAC Configuration
+- IAM role to Kubernetes RBAC mapping
+- Configurable permission sets
+- Automatic aws-auth configmap management
+
+## Security
+- IAM Roles for Service Accounts (IRSA) for all components
+- Configurable API endpoint access (public/private)
+- Network isolation through VPC configuration
+- Least-privilege IAM policies
+
+## Maintenance
+To update the cluster configuration:
+1. Modify the Terraform files
+2. Review changes:
+   ```bash
+   terraform plan
+   ```
+3. Apply changes:
+   ```bash
+   terraform apply
+   ```
+
+## Cleanup
+To destroy all resources:
+```bash
+terraform destroy
+```

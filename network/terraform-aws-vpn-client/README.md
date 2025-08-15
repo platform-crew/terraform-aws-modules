@@ -1,76 +1,127 @@
 # AWS Client VPN Terraform Module
 
-This Terraform module provisions an **AWS Client VPN** endpoint with integrated support for:
+## Overview
+This Terraform module deploys a complete AWS Client VPN solution with integrated SSO authentication, network access controls, and monitoring capabilities.
 
-- IAM SAML (SSO) authentication
-- Fine-grained access control using group-based authorization rules
-- Logging and monitoring to Amazon CloudWatch
-- Secure network configuration using Security Groups
-- High availability through subnet associations across multiple AZs
+## Features
+- **SSO Integration**: Federated authentication with SAML 2.0
+- **High Availability**: Multi-subnet deployment across AZs
+- **Security**: TLS encryption, security groups, and network access controls
+- **Monitoring**: CloudWatch logging with configurable retention
+- **Access Control**: Granular authorization by SSO groups
+- **Split Tunneling**: Optimized network traffic routing
 
----
+## Requirements
+- Terraform >= 1.12.1
+- AWS Provider >= 5.0
+- Existing VPC with private subnets
+- ACM certificate for VPN endpoint
+- SAML metadata from identity provider
 
-## 📦 Components Deployed
-
-| Component                          | Description                                                                 |
-|------------------------------------|-----------------------------------------------------------------------------|
-| `aws_security_group.client_vpn_sg` | Controls inbound/outbound VPN traffic                                      |
-| `aws_iam_saml_provider.sso_provider` | Sets up SAML provider for federated SSO authentication                    |
-| `aws_cloudwatch_log_group.vpn_logs` | Stores VPN connection logs                                                 |
-| `aws_cloudwatch_log_stream.vpn_connection_logs` | Dedicated log stream for connection logs                          |
-| `aws_ec2_client_vpn_endpoint.client_vpn` | Main Client VPN endpoint                                                   |
-| `aws_ec2_client_vpn_authorization_rule.group_access` | Grants CIDR access to SSO groups                                  |
-| `aws_ec2_client_vpn_network_association.private_subnets` | Associates the VPN with private subnets for access               |
-
----
-
-## 🚀 Usage
-
+## Usage
 ```hcl
 module "client_vpn" {
-  source = "./path-to-module"
+  source = "./path/to/module"
 
-  environment              = "prod"
-  vpc_id                   = "vpc-abc123"
-  sg_allowed_egress_cidr   = "10.0.0.0/8"
-  private_subnet_ids       = ["subnet-1111", "subnet-2222"]
-  client_cidr_block        = "10.2.0.0/16"
-  server_certificate_arn   = "arn:aws:acm:region:account:certificate/xxx"
-  sso_metadata_file_path   = "sso_metadata.xml"
+  environment        = "production"
+  vpc_id            = "vpc-12345678"
+  vpc_cidr_block    = "10.0.0.0/16"
+  private_subnet_ids = ["subnet-123456", "subnet-234567"]
+
+  client_cidr_block      = "10.2.0.0/16"
+  server_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/abcd1234"
+  sso_metadata           = file("sso_metadata.xml")
+  dns_servers           = ["10.0.0.2", "8.8.8.8"]
+
   sso_group_access_rules = [
     {
-      group_id    = "GROUP-ID-1"
-      target_cidr = "10.10.0.0/16"
-      description = "Access to shared services"
+      group_id    = "dev-group-id"
+      target_cidr = "10.0.1.0/24"
+      description = "Developer access to app servers"
     },
     {
-      group_id    = "GROUP-ID-2"
-      target_cidr = "10.20.0.0/16"
+      group_id    = "admin-group-id"
+      target_cidr = "10.0.0.0/16"
     }
   ]
-  log_retention_days = 14
-  logs_kms_key_arn   = "arn:aws:kms:region:account:key/xxx"
+
+  log_retention_days = 90
+  logs_kms_key_arn   = "arn:aws:kms:us-east-1:123456789012:key/abcd1234"
 }
 ```
-## 🔐 Inputs
 
-| Name                     | Type           | Description                                            | Required        |
-| ------------------------ | -------------- | ------------------------------------------------------ | --------------- |
-| `environment`            | `string`       | Environment name (e.g., dev, prod)                     | ✅               |
-| `vpc_id`                 | `string`       | ID of the VPC where the VPN is deployed                | ✅               |
-| `sg_allowed_egress_cidr` | `string`       | CIDR allowed in SG egress (e.g., internal IP ranges)   | ✅               |
-| `private_subnet_ids`     | `list(string)` | List of subnet IDs for VPN network association         | ✅               |
-| `client_cidr_block`      | `string`       | CIDR block for VPN clients (must not overlap with VPC) | ✅               |
-| `server_certificate_arn` | `string`       | ACM certificate ARN used by the VPN                    | ✅               |
-| `sso_metadata_file_path` | `string`       | File path to SSO metadata XML file                     | ✅               |
-| `sso_group_access_rules` | `list(object)` | List of SSO group access rules                         | ✅               |
-| `log_retention_days`     | `number`       | CloudWatch log retention in days                       | ❌ (Default: 30) |
-| `logs_kms_key_arn`       | `string`       | KMS key ARN for encrypting logs                        | ❌               |
+## Input Variables
 
-## 📤 Outputs
-| Name                    | Description                          |
-| ----------------------- | ------------------------------------ |
-| `vpn_endpoint_dns_name` | DNS name of the created VPN endpoint |
+### Core Configuration
+| Name | Description | Type | Required |
+|------|-------------|------|----------|
+| environment | Deployment environment | string | Yes |
+| vpc_id | Target VPC ID | string | Yes |
+| vpc_cidr_block | VPC CIDR range | string | Yes |
+| private_subnet_ids | Subnets for VPN HA | list(string) | Yes |
+| client_cidr_block | VPN client IP range | string | Yes |
+| server_certificate_arn | ACM cert ARN | string | Yes |
+| sso_metadata | SAML metadata XML | string | Yes |
+| dns_servers | DNS servers for clients | list(string) | Yes |
 
-## License
-This module is open-sourced under the MIT License.
+### Access Control
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| sso_group_access_rules | SSO group access rules | list(object) | [] |
+
+### Monitoring
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| log_retention_days | CloudWatch log retention | number | 30 |
+| logs_kms_key_arn | KMS key for log encryption | string | "" |
+
+## Outputs
+| Name | Description |
+|------|-------------|
+| vpn_endpoint_dns_name | DNS name for VPN connection |
+| client_vpn_sg_id | VPN security group ID |
+
+## Module Components
+
+### 1. Security
+- **Security Group**: Restricted access on port 443 (TLS)
+- **IAM SAML Provider**: SSO integration setup
+- **Access Rules**: Granular network access by SSO groups
+
+### 2. Networking
+- **VPN Endpoint**: Client VPN service endpoint
+- **Subnet Associations**: HA across multiple private subnets
+- **Split Tunnel**: Optimized routing configuration
+
+### 3. Monitoring
+- **CloudWatch Logs**: Connection logging
+- **KMS Encryption**: Optional log encryption
+- **Log Streams**: Dedicated connection log stream
+
+## Best Practices
+1. Use separate CIDR ranges for VPN clients and VPC resources
+2. Implement least-privilege access with SSO group rules
+3. Enable log encryption for sensitive environments
+4. Monitor connection logs for security events
+5. Regularly rotate server certificates
+6. Use DNS servers that can resolve internal resources
+
+## Maintenance
+To update VPN configuration:
+1. Modify the Terraform variables
+2. Preview changes:
+   ```bash
+   terraform plan
+   ```
+3. Apply changes:
+   ```bash
+   terraform apply
+   ```
+
+Note: Some changes may cause temporary VPN disconnections.
+
+## Cleanup
+To decommission the VPN:
+```bash
+terraform destroy
+```
