@@ -28,7 +28,7 @@ variable "endpoint_private_access" {
 variable "endpoint_public_access" {
   description = "Is EKS endpoint public"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "subnet_ids" {
@@ -123,5 +123,5 @@ variable "cluster_rbac_config" {
 variable "public_access_cidrs" {
   description = "List of public cidrs to access EKS control plane"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
 }

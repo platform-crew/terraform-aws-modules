@@ -81,6 +81,35 @@ resource "aws_iam_role_policy" "s3_upload_policy" {
 # CloudFront
 #####################
 
+# Logging S3 bucket for CloudFront
+resource "aws_s3_bucket" "cloudfront_logs" {
+  bucket = "${var.bucket_name}-logs"
+  acl    = "log-delivery-write"
+
+  tags = {
+    Name        = "${var.bucket_name}-logs"
+    Environment = var.environment
+  }
+}
+
+# Lifecycle policy: automatically delete logs older than X days
+resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+
+  rule {
+    id     = "ExpireOldLogs"
+    status = "Enabled"
+
+    expiration {
+      days = var.cloudfront_log_retention_days
+    }
+
+    filter {
+      prefix = "cloudfront-logs/"
+    }
+  }
+}
+
 # Origin Access control
 resource "aws_cloudfront_origin_access_control" "s3_oac" {
   name                              = "s3-oac"
@@ -130,6 +159,12 @@ resource "aws_cloudfront_distribution" "cdn" {
     acm_certificate_arn      = var.bucket_domain_cert_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  logging_config {
+    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
+    include_cookies = false
+    prefix          = "cloudfront-logs/"
   }
 }
 
