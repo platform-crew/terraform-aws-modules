@@ -19,7 +19,7 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/platform-crew/infrastructure-modules.git
+   git clone https://github.com/platform-crew/terraform-aws-modules.git
    cd terraform-aws-modules
    ```
 
@@ -31,7 +31,7 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 3. **Use modules**
    ```hcl
    module "example" {
-     source = "git::https://github.com/platform-crew/terrafrom-aws-modules.git//compute/eks-cluster"
+     source = "git::https://github.com/platform-crew/terraform-aws-modules.git//compute/eks-cluster"
 
      # Required variables...
    }
