@@ -79,7 +79,7 @@ variable "rds_auto_minor_version_upgrade" {
 variable "iam_database_authentication_enabled" {
   description = "Enable IAM authentication for the RDS instance"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "rds_maintenance_window" {
@@ -91,5 +91,5 @@ variable "rds_maintenance_window" {
 variable "rds_enable_delete_protection" {
   description = "Protection again deletion"
   type        = bool
-  default     = false
+  default     = true
 }

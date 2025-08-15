@@ -36,3 +36,9 @@ variable "bucket_path_config" {
   }))
   description = "List of paths with GitHub and IAM assume role configuration"
 }
+
+variable "cloudfront_log_retention_days" {
+  description = "Cloudfront log retention days"
+  type        = number
+  default     = 14
+}
