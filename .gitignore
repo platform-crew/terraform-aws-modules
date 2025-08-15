@@ -1,0 +1,67 @@
+### Ansible and Terraform
+*-rendered
+.terraform
+*.tfstate
+
+### Gradle
+/build/
+.gradle
+.gradle/*
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+/out/
+
+### JAVA STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### Linux
+*~
+
+### macOS
+.DS_Store
+
+### NetBeans
+/dist/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+/nbproject/private/
+
+### Python
+# pyenv
+.python-version
+Pipfile
+
+### Python Byte-compiled
+__pycache__/
+
+### SAM
+.aws-sam/*
+.aws-sam
+
+### VisualStudioCode
+.history
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+### Virtualenvs
+.env
+.venv
+
+*.tfstate.backup
+*.terraform.lock.hcl
+*.xml
