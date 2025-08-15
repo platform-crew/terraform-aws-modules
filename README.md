@@ -7,20 +7,20 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 
 | Module | Description |
 |--------|-------------|
-| [EKS Cluster](/modules/eks-cluster) | Production-ready EKS cluster with ALB controller, autoscaler, and RBAC integration |
-| [RDS PostgreSQL](/modules/rds-postgresql) | Managed PostgreSQL database with configurable security and maintenance settings |
-| [Route Tables](/modules/route-tables) | Dynamic route table configuration for public/private subnets |
-| [Subnets](/modules/subnets) | Multi-AZ subnet provisioning with public/private configuration |
-| [Client VPN](/modules/client-vpn) | SSO-integrated AWS Client VPN endpoint with monitoring |
-| [GitHub to ECR](/modules/github-ecr) | Secure image push from GitHub Actions to ECR using OIDC |
-| [Static Website](/modules/static-website) | CDN-fronted static hosting with GitHub Actions deployment |
+| [EKS Cluster](/compute/terraform-aws-eks-cluster) | Production-ready EKS cluster with ALB controller, autoscaler, and RBAC integration |
+| [RDS PostgreSQL](/database/terraform-aws-rds) | Managed PostgreSQL database with configurable security and maintenance settings |
+| [Route Tables](/network/terraform-aws-routetable) | Dynamic route table configuration for public/private subnets |
+| [Subnets](/network/terraform-aws-subnets) | Multi-AZ subnet provisioning with public/private configuration |
+| [Client VPN](/network/terraform-aws-vpn-client) | SSO-integrated AWS Client VPN endpoint with monitoring |
+| [GitHub to ECR](/storage/terraform-aws-ecr-git) | Secure image push from GitHub Actions to ECR using OIDC |
+| [Static Website](/storage/terraform-aws-s3-staticfiles) | CDN-fronted static hosting with GitHub Actions deployment |
 
 ## Getting Started
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-repo/aws-terraform-modules.git
-   cd aws-terraform-modules
+   git clone https://github.com/platform-crew/infrastructure-modules.git
+   cd terraform-aws-modules
    ```
 
 2. **Initialize Terraform**
@@ -31,7 +31,8 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 3. **Use modules**
    ```hcl
    module "example" {
-     source = "./modules/eks-cluster"
+     source = "git::https://github.com/platform-crew/terrafrom-aws-modules.git//compute/terraform-eks-cluster"
+
      # Required variables...
    }
    ```
@@ -41,21 +42,6 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 - Terraform >= 1.12.1
 - AWS Provider >= 5.0
 - AWS account with appropriate permissions
-
-## Structure
-
-```
-aws-terraform-modules/
-├── modules/
-│   ├── eks-cluster/          # EKS cluster components
-│   ├── rds-postgresql/       # PostgreSQL database
-│   ├── route-tables/         # Network routing
-│   ├── subnets/              # Subnet configuration
-│   ├── client-vpn/           # VPN infrastructure
-│   ├── github-ecr/           # CI/CD integration
-│   └── static-website/       # Static hosting
-└── README.md                 # This file
-```
 
 ## Contributing
 
