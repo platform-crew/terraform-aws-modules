@@ -23,7 +23,7 @@ variable "bucket_domain_cert_arn" {
   description = "Domain certificate"
 }
 
-variable "bucket_doamin_route53_zone_id" {
+variable "bucket_domain_route53_zone_id" {
   type        = string
   description = "Domain's route 53 zone ID"
 }

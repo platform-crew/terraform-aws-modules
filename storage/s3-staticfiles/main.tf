@@ -191,10 +191,33 @@ resource "aws_wafv2_web_acl" "static_site" {
     sampled_requests_enabled   = true
   }
 
+  ## Rate limitting
+  rule {
+    name     = "RateLimitting"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 20000 # safe for S3 static files
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "RateLimitting"
+      sampled_requests_enabled   = true # set true to see sample blocked requests
+    }
+  }
+
   ## SQL Injection Rule
   rule {
     name     = "BlockSQLInjection"
-    priority = 1
+    priority = 2
     action {
       block {}
     }
@@ -219,7 +242,7 @@ resource "aws_wafv2_web_acl" "static_site" {
   ## XSS Rule
   rule {
     name     = "BlockXSS"
-    priority = 2
+    priority = 3
     action {
       block {}
     }
@@ -244,11 +267,12 @@ resource "aws_wafv2_web_acl" "static_site" {
   ## Block Bad Bots (User-Agent header match)
   rule {
     name     = "BlockBadBots"
-    priority = 3
+    priority = 4
     action {
       block {}
     }
     statement {
+      # TODO: Convert this into variable to be abloe to extend this to other known bots
       byte_match_statement {
         search_string         = "BadBot"
         positional_constraint = "CONTAINS"
@@ -312,7 +336,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     min_ttl     = 0
-    default_ttl = 3600  # 1 hour
+    default_ttl = 21600 # 6 hour
     max_ttl     = 86400 # 1 day
   }
 
@@ -338,7 +362,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 # Route 53 (DNS Alias for CloudFront)
 ############################################################
 resource "aws_route53_record" "cdn_alias" {
-  zone_id = var.bucket_doamin_route53_zone_id
+  zone_id = var.bucket_domain_route53_zone_id
   name    = var.bucket_domain_name
   type    = "A"
 
