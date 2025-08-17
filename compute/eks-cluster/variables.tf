@@ -28,7 +28,7 @@ variable "endpoint_private_access" {
 variable "endpoint_public_access" {
   description = "Is EKS endpoint public"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "subnet_ids" {
@@ -123,5 +123,29 @@ variable "cluster_rbac_config" {
 variable "public_access_cidrs" {
   description = "List of public cidrs to access EKS control plane"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
+}
+
+variable "cluster_kms_key_deletion_window_in_days" {
+  description = "EKS KMS key deletion window"
+  type        = number
+  default     = 7 # 7 days
+}
+
+variable "cluster_kms_key_rotation" {
+  description = "EKS KMS key key rotation"
+  type        = bool
+  default     = true
+}
+
+variable "enabled_cluster_log_types" {
+  description = "EKS enable cluster log types"
+  type        = list(string)
+  default = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
 }

@@ -32,6 +32,17 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_vpc_controller_policy" {
 }
 
 #------------------ EKS Cluster ------------------------
+resource "aws_kms_key" "eks_secrets" {
+  description             = "KMS key for EKS secrets encryption"
+  deletion_window_in_days = var.cluster_kms_key_deletion_window_in_days
+  enable_key_rotation     = var.cluster_kms_key_rotation
+}
+
+resource "aws_kms_alias" "eks_secrets_alias" {
+  name          = "alias/${var.cluster_name}-eks-secrets"
+  target_key_id = aws_kms_key.eks_secrets.id
+}
+
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
@@ -48,6 +59,17 @@ resource "aws_eks_cluster" "eks_cluster" {
   kubernetes_network_config {
     service_ipv4_cidr = "172.20.0.0/16" # Must not overlap with VPC CIDR
   }
+
+  encryption_config {
+    resources = ["secrets"]
+
+    provider {
+      key_arn = aws_kms_key.eks_secrets.arn
+    }
+  }
+
+  # Enable control plane logging
+  enabled_cluster_log_types = var.enabled_cluster_log_types
 
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy

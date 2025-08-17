@@ -27,13 +27,30 @@ resource "aws_security_group" "rds" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+    description = "Allow all outbound traffic"
   }
 
   tags = {
     Name        = "${var.environment}-rds-${var.rds_db_name}-sg"
     Environment = var.environment
   }
+}
+
+resource "aws_kms_key" "rds_performance_insights" {
+  description             = "KMS key for RDS Performance Insights"
+  deletion_window_in_days = var.rds_kms_key_deletion_window_in_days
+  enable_key_rotation     = true
+
+  tags = {
+    Name        = "${var.environment}-rds-performance-insights-kms"
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "rds_performance_insights_alias" {
+  name          = "alias/${var.environment}-rds-pi"
+  target_key_id = aws_kms_key.rds_performance_insights.id
 }
 
 # RDS Instance
@@ -46,6 +63,10 @@ resource "aws_db_instance" "rds_db" {
   username                            = var.rds_db_username
   password                            = var.rds_db_password
   iam_database_authentication_enabled = var.iam_database_authentication_enabled
+
+  performance_insights_enabled          = true
+  performance_insights_retention_period = var.rds_performance_insights_retention_period
+  performance_insights_kms_key_id       = aws_kms_key.rds_performance_insights.arn
 
   allocated_storage     = var.rds_allocated_storage
   max_allocated_storage = var.rds_max_allocated_storage
