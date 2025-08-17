@@ -34,8 +34,8 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_vpc_controller_policy" {
 #------------------ EKS Cluster ------------------------
 resource "aws_kms_key" "eks_secrets" {
   description             = "KMS key for EKS secrets encryption"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
+  deletion_window_in_days = var.cluster_kms_key_deletion_window_in_days
+  enable_key_rotation     = var.cluster_kms_key_rotation
 }
 
 resource "aws_kms_alias" "eks_secrets_alias" {
@@ -69,13 +69,7 @@ resource "aws_eks_cluster" "eks_cluster" {
   }
 
   # Enable control plane logging
-  enabled_cluster_log_types = [
-    "api",
-    "audit",
-    "authenticator",
-    "controllerManager",
-    "scheduler"
-  ]
+  enabled_cluster_log_types = var.enabled_cluster_log_types
 
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy

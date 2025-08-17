@@ -54,11 +54,16 @@ resource "aws_iam_saml_provider" "sso_provider" {
 # ======================
 # MONITORING
 # ======================
+resource "aws_kms_key" "logs" {
+  description             = "CMK for encrypting CloudWatch logs"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+}
 
 resource "aws_cloudwatch_log_group" "vpn_logs" {
   name              = "/aws/client-vpn/${var.environment}"
   retention_in_days = var.log_retention_days
-  kms_key_id        = var.logs_kms_key_arn
+  kms_key_id        = aws_kms_key.logs.arn
 
   tags = {
     Name        = "${var.environment}-vpn-log-group"

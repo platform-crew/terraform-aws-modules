@@ -125,3 +125,27 @@ variable "public_access_cidrs" {
   type        = list(string)
   default     = []
 }
+
+variable "cluster_kms_key_deletion_window_in_days" {
+  description = "EKS KMS key deletion window"
+  type        = number
+  default     = 7 # 7 days
+}
+
+variable "cluster_kms_key_rotation" {
+  description = "EKS KMS key key rotation"
+  type        = bool
+  default     = true
+}
+
+variable "enabled_cluster_log_types" {
+  description = "EKS enable cluster log types"
+  type        = list(string)
+  default = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
+}

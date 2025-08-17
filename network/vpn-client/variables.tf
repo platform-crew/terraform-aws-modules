@@ -62,12 +62,6 @@ variable "log_retention_days" {
   description = "Number of days to retain VPN connection logs in CloudWatch"
 }
 
-variable "logs_kms_key_arn" {
-  type        = string
-  default     = ""
-  description = "ARN of the KMS key for encrypting VPN logs (leave empty for AWS-managed encryption)"
-}
-
 variable "sso_metadata" {
   type        = string
   description = "SSO Metadata xml content"

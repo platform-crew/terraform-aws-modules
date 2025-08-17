@@ -93,3 +93,15 @@ variable "rds_enable_delete_protection" {
   type        = bool
   default     = true
 }
+
+variable "rds_kms_key_deletion_window_in_days" {
+  description = "KMS key for RDS Performance Insights"
+  type        = number
+  default     = 7
+}
+
+variable "rds_performance_insights_retention_period" {
+  description = "RDS Performance insights retention period"
+  type        = number
+  default     = 7
+}
