@@ -90,6 +90,12 @@ resource "aws_iam_role_policy_attachment" "attach_push_policy" {
 #-------------------------------
 # Create ECR Repositories
 #-------------------------------
+resource "aws_kms_key" "ecr_repo_key" {
+  description             = "KMS key for ECR repository encryption"
+  deletion_window_in_days = var.ecr_kms_deletion_window_in_days
+  enable_key_rotation     = true
+}
+
 resource "aws_ecr_repository" "image_repositories" {
   for_each = { for cfg in var.repository_config : cfg.git_repository => cfg }
 
@@ -98,6 +104,11 @@ resource "aws_ecr_repository" "image_repositories" {
 
   image_scanning_configuration {
     scan_on_push = each.value.scan_on_push
+  }
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = aws_kms_key.ecr_repo_key.arn
   }
 
   tags = {

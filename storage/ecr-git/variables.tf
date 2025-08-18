@@ -37,3 +37,9 @@ variable "repository_config" {
   }))
   description = "ECR repository config to push image from"
 }
+
+variable "ecr_kms_deletion_window_in_days" {
+  description = "ECR KMS key deletion window"
+  type        = number
+  default     = 7
+}
