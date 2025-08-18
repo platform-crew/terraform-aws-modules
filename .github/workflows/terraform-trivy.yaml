@@ -15,19 +15,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Trivy Scan (Terraform IaC security check)
+      # Run Trivy IaC Scan
       - name: Trivy IaC Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: config
-          scan-ref: .
-          format: table
-          exit-code: 0
-          output: trivy-report.md
+        id: trivy
+        run: |
+          echo "Running Trivy scan..."
 
-      # Upload scan results as artifact
-      - name: Upload Trivy Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-report
-          path: trivy-report.md
+          # Run scan and capture output
+          trivy config . --format table --exit-code 1 > trivy-report.txt
+
+          # Print everything to log
+          cat trivy-report.txt
+
+          # Extract only the vulnerability table (strip headers & noise)
+          TABLE=$(grep -A 9999 "VULN ID" trivy-report.txt)
+
+          # Write table to summary
+          echo "## 🛡️ Trivy IaC Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "$TABLE" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

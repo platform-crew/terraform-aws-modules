@@ -1,5 +1,6 @@
 # Infrastructure Reusable Modules
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Terraform & Trivy Scan](https://github.com/platform-crew/terraform-aws-modules/actions/workflows/terraform-trivy.yaml/badge.svg)](https://github.com/platform-crew/terraform-aws-modules/actions/workflows/terraform-trivy.yaml)
 
 This repository contains reusable Terraform modules for provisioning AWS infrastructure components following best practices.
 
