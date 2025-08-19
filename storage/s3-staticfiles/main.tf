@@ -117,7 +117,7 @@ resource "aws_iam_role_policy" "s3_upload_policy" {
 #trivy:ignore:AVD-AWS-0089
 #trivy:ignore:AVD-AWS-0090
 resource "aws_s3_bucket" "cloudfront_logs" {
-  bucket = "${var.bucket_name}-logs"
+  bucket = "${var.bucket_name}-cloudfront-logs"
 
   tags = {
     Name        = "${var.bucket_name}-logs"
@@ -172,6 +172,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_logs" 
 
 # Web Application Firewall (WAF) to protect CloudFront distribution
 resource "aws_wafv2_web_acl" "static_site" {
+  provider    = aws.us_east_1
   name        = "${var.environment}-static-site-waf"
   description = "WAF for static site CloudFront distribution"
   scope       = "CLOUDFRONT"
