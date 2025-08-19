@@ -112,27 +112,16 @@ resource "aws_iam_role_policy" "s3_upload_policy" {
 ############################################################
 
 # S3 bucket to store CloudFront access logs
+# This is used only to log cloudfront
+# No need to versioning as it unecessary increases cost
+#trivy:ignore:AVD-AWS-0089
+#trivy:ignore:AVD-AWS-0090
 resource "aws_s3_bucket" "cloudfront_logs" {
   bucket = "${var.bucket_name}-logs"
 
   tags = {
     Name        = "${var.bucket_name}-logs"
     Environment = var.environment
-  }
-}
-
-# Required ACL for log delivery by CloudFront
-resource "aws_s3_bucket_acl" "cloudfront_logs_acl" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-  acl    = "log-delivery-write"
-}
-
-# Enable versioning for logs bucket
-resource "aws_s3_bucket_versioning" "cloudfront_logs_versioning" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  versioning_configuration {
-    status = "Enabled"
   }
 }
 
@@ -165,12 +154,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
 }
 
 # Encrypt CloudFront logs with SSE-S3
+resource "aws_kms_key" "cloudfront_logs" {
+  description         = "KMS CMK for CloudFront logs"
+  enable_key_rotation = true
+}
+
 resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_logs" {
   bucket = aws_s3_bucket.cloudfront_logs.id
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.cloudfront_logs.arn
     }
   }
 }

@@ -32,7 +32,7 @@ module "static_website" {
 
   bucket_domain_name            = "static.example.com"
   bucket_domain_cert_arn        = "arn:aws:acm:us-east-1:123456789012:certificate/abcd1234"
-  bucket_doamin_route53_zone_id = "Z1234567890ABC"
+  bucket_domain_route53_zone_id = "Z1234567890ABC"
 
   git_organization = "my-org"
 
@@ -60,7 +60,7 @@ module "static_website" {
 | bucket_name | S3 bucket name | string |
 | bucket_domain_name | Website domain name | string |
 | bucket_domain_cert_arn | ACM certificate ARN | string |
-| bucket_doamin_route53_zone_id | Route53 zone ID | string |
+| bucket_domain_route53_zone_id | Route53 zone ID | string |
 | git_organization | GitHub organization name | string |
 | bucket_path_config | Path configuration list | list(object) |
 
