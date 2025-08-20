@@ -52,18 +52,15 @@ resource "aws_iam_saml_provider" "sso_provider" {
 }
 
 # ======================
-# MONITORING
+# VPN ENDPOINT
 # ======================
-resource "aws_kms_key" "logs" {
-  description             = "CMK for encrypting CloudWatch logs"
-  deletion_window_in_days = 30
-  enable_key_rotation     = true
-}
-
+# CloudWatch Log Group for VPN logs
+# Ignoring AVD-AWS-0017: Using default AWS-managed encryption key instead of a CMK.
+# Reason: Logs are forwarded to observability platform and using a CMK is unnecessary
+# tfsec:ignore:AVD-AWS-0017
 resource "aws_cloudwatch_log_group" "vpn_logs" {
   name              = "/aws/client-vpn/${var.environment}"
   retention_in_days = var.log_retention_days
-  kms_key_id        = aws_kms_key.logs.arn
 
   tags = {
     Name        = "${var.environment}-vpn-log-group"
@@ -72,15 +69,13 @@ resource "aws_cloudwatch_log_group" "vpn_logs" {
   }
 }
 
+# CloudWatch Log Stream for connection logs
 resource "aws_cloudwatch_log_stream" "vpn_connection_logs" {
   name           = "connection-logs"
   log_group_name = aws_cloudwatch_log_group.vpn_logs.name
 }
 
-# ======================
-# VPN ENDPOINT
-# ======================
-
+# Enable VPN logging
 resource "aws_ec2_client_vpn_endpoint" "client_vpn" {
   description            = "AWS Client VPN endpoint for the ${var.environment} environment"
   server_certificate_arn = var.server_certificate_arn

@@ -108,75 +108,12 @@ resource "aws_iam_role_policy" "s3_upload_policy" {
 
 
 ############################################################
-# CloudFront + Logging + WAF
+# CloudFront + WAF
 ############################################################
-
-# S3 bucket to store CloudFront access logs
-resource "aws_s3_bucket" "cloudfront_logs" {
-  bucket = "${var.bucket_name}-logs"
-
-  tags = {
-    Name        = "${var.bucket_name}-logs"
-    Environment = var.environment
-  }
-}
-
-# Required ACL for log delivery by CloudFront
-resource "aws_s3_bucket_acl" "cloudfront_logs_acl" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-  acl    = "log-delivery-write"
-}
-
-# Enable versioning for logs bucket
-resource "aws_s3_bucket_versioning" "cloudfront_logs_versioning" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-# Block public access to logs bucket
-resource "aws_s3_bucket_public_access_block" "cloudfront_logs_access_block" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# Automatically expire CloudFront logs after X days
-resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  rule {
-    id     = "ExpireOldLogs"
-    status = "Enabled"
-
-    expiration {
-      days = var.cloudfront_log_retention_days
-    }
-
-    filter {
-      prefix = "cloudfront-logs/"
-    }
-  }
-}
-
-# Encrypt CloudFront logs with SSE-S3
-resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
 
 # Web Application Firewall (WAF) to protect CloudFront distribution
 resource "aws_wafv2_web_acl" "static_site" {
+  provider    = aws.us_east_1
   name        = "${var.environment}-static-site-waf"
   description = "WAF for static site CloudFront distribution"
   scope       = "CLOUDFRONT"
@@ -311,6 +248,9 @@ resource "aws_cloudfront_origin_access_control" "s3_oac" {
 }
 
 # CloudFront Distribution to serve S3 content securely via HTTPS
+# We should use an external platform for observability, and since this distribution serves only static files,
+# enabling logging would unnecessarily increase costs.
+#trivy:ignore:AVD-AWS-0010 CloudFront logging is intentionally disabled.
 resource "aws_cloudfront_distribution" "cdn" {
   enabled     = true
   price_class = "PriceClass_100" # Cheapest tier (US, Canada, Europe)
@@ -348,12 +288,6 @@ resource "aws_cloudfront_distribution" "cdn" {
     acm_certificate_arn      = var.bucket_domain_cert_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
-  }
-
-  logging_config {
-    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
-    include_cookies = false
-    prefix          = "cloudfront-logs/"
   }
 }
 
