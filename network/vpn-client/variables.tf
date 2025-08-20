@@ -1,7 +1,6 @@
 # ======================
 # NETWORK CONFIGURATION
 # ======================
-
 variable "environment" {
   description = "Environment"
   type        = string
@@ -52,16 +51,6 @@ variable "server_certificate_arn" {
   description = "ACM certificate ARN for VPN client"
 }
 
-# ======================
-# LOGGING & MONITORING
-# ======================
-
-variable "log_retention_days" {
-  type        = number
-  default     = 30
-  description = "Number of days to retain VPN connection logs in CloudWatch"
-}
-
 variable "sso_metadata" {
   type        = string
   description = "SSO Metadata xml content"
@@ -71,4 +60,14 @@ variable "sso_metadata" {
 variable "dns_servers" {
   type        = list(string)
   description = "DNS servers list"
+}
+
+# ======================
+# LOGGING & MONITORING
+# ======================
+
+variable "log_retention_days" {
+  type        = number
+  default     = 7 # Set Minimum because logs are send to observability platform
+  description = "Number of days to retain VPN connection logs in CloudWatch"
 }
