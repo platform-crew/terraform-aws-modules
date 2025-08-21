@@ -149,3 +149,14 @@ variable "enabled_cluster_log_types" {
     "scheduler"
   ]
 }
+
+variable "external_dns_chart_version" {
+  description = "ExternalDNS Chart version"
+  type        = string
+  default     = "1.18.0"
+}
+
+variable "external_dns_domain_filter" {
+  description = "ExtenalDNS allowed domains list to manage"
+  type        = list(string)
+}
