@@ -76,9 +76,9 @@ resource "helm_release" "externaldns" {
       domainFilters = var.external_dns_domain_filter # Only manage this domain
       sources       = ["ingress", "service"]
 
-      extraArgs = {
-        provider = "aws"
-      }
+      extraArgs = [
+        "--provider=aws"
+      ]
 
       serviceAccount = {
         name   = kubernetes_service_account.externaldns_sa.metadata[0].name
