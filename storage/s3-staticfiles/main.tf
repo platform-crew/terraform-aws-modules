@@ -67,6 +67,16 @@ resource "aws_kms_key" "staticfiles_kms_key" {
           "kms:GenerateDataKey"
         ],
         Resource = "*"
+      },
+      # CloudFront service principal
+      {
+        Sid    = "AllowCloudFrontService"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = ["kms:Decrypt"]
+        Resource = "*"
       }
     ]
   })
