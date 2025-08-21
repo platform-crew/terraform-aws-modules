@@ -37,6 +37,39 @@ resource "aws_s3_bucket_public_access_block" "static_files_access_block" {
 resource "aws_kms_key" "staticfiles_kms_key" {
   description         = "KMS CMK for static files bucket"
   enable_key_rotation = true
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      # Default AWS account root user gets full access
+      {
+        Sid    = "EnableIAMUserPermissions",
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*",
+        Resource = "*"
+      },
+      # Allow GitHub Actions role(s) to use the key for S3 object encryption
+      {
+        Sid    = "AllowGitHubActionsUseOfKey",
+        Effect = "Allow",
+        Principal = {
+          AWS = [
+            for cfg in var.bucket_path_config :
+            aws_iam_role.github_actions_s3_upload[cfg.path].arn
+          ]
+        },
+        Action = [
+          "kms:Decrypt",
+          "kms:Encrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = aws_kms_key.staticfiles_kms_key.arn
+      }
+    ]
+  })
 }
 
 # Enforce server-side encryption using KMS for all objects
