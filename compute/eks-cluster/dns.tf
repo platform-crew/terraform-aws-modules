@@ -71,11 +71,14 @@ resource "helm_release" "externaldns" {
 
   values = [
     yamlencode({
-      provider      = "aws"         # Use AWS Route53
       policy        = "upsert-only" # Only create/update records, never delete
       txtOwnerId    = "${var.environment}-externaldns"
       domainFilters = var.external_dns_domain_filter # Only manage this domain
       sources       = ["ingress", "service"]
+
+      extraArgs = {
+        provider = "aws"
+      }
 
       serviceAccount = {
         name   = kubernetes_service_account.externaldns_sa.metadata[0].name
