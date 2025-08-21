@@ -75,7 +75,7 @@ resource "aws_kms_key" "staticfiles_kms_key" {
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Action   = ["kms:Decrypt"]
+        Action   = ["kms:Decrypt", "kms:DescribeKey"]
         Resource = "*"
       }
     ]
