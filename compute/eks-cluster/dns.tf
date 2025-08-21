@@ -81,9 +81,6 @@ resource "helm_release" "externaldns" {
         name   = kubernetes_service_account.externaldns_sa.metadata[0].name
         create = false # Use the pre-created service account
       }
-
-      extraArgs = ["--all-namespaces"]
-
     })
   ]
 
