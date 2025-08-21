@@ -66,7 +66,7 @@ resource "aws_kms_key" "staticfiles_kms_key" {
           "kms:Encrypt",
           "kms:GenerateDataKey"
         ],
-        Resource = aws_kms_key.staticfiles_kms_key.arn
+        Resource = "*"
       }
     ]
   })
