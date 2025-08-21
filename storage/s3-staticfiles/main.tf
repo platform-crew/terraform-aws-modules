@@ -172,7 +172,7 @@ resource "aws_wafv2_web_acl" "static_site" {
 
     statement {
       rate_based_statement {
-        limit              = 20000 # safe for S3 static files
+        limit              = var.cdn_waf_rate_limitting
         aggregate_key_type = "IP"
       }
     }
@@ -241,28 +241,36 @@ resource "aws_wafv2_web_acl" "static_site" {
     action {
       block {}
     }
-    statement {
-      # TODO: Convert this into variable to be abloe to extend this to other known bots
-      byte_match_statement {
-        search_string         = "BadBot"
-        positional_constraint = "CONTAINS"
 
-        field_to_match {
-          headers {
-            match_scope       = "VALUE"
-            oversize_handling = "MATCH"
-            match_pattern {
-              included_headers = ["User-Agent"]
+    statement {
+      or_statement {
+        dynamic "statement" {
+          for_each = var.cdn_waf_bad_bots
+          content {
+            byte_match_statement {
+              search_string         = statement.value
+              positional_constraint = "CONTAINS"
+
+              field_to_match {
+                headers {
+                  match_scope       = "VALUE"
+                  oversize_handling = "MATCH"
+                  match_pattern {
+                    included_headers = ["User-Agent"]
+                  }
+                }
+              }
+
+              text_transformation {
+                priority = 0
+                type     = "NONE"
+              }
             }
           }
         }
-
-        text_transformation {
-          priority = 0
-          type     = "NONE"
-        }
       }
     }
+
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "BlockBadBots"
@@ -308,9 +316,9 @@ resource "aws_cloudfront_distribution" "cdn" {
       cookies { forward = "none" }
     }
 
-    min_ttl     = 0
-    default_ttl = 21600 # 6 hour
-    max_ttl     = 86400 # 1 day
+    min_ttl     = var.cdn_cache_min_ttl
+    default_ttl = var.cdn_cache_default_ttl
+    max_ttl     = var.cdn_cache_max_ttl
   }
 
   restrictions {
