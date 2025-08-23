@@ -42,7 +42,7 @@ variable "task_memory" {
 variable "container_image" {
   description = "Container image for the Terraform agent"
   type        = string
-  default     = "hashicorp/terraform:latest"
+  default     = "hashicorp/tfc-agent:latest"
 }
 
 variable "container_name" {
