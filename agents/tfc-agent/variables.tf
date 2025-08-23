@@ -109,8 +109,3 @@ variable "tfc_agent_token" {
   type        = string
   sensitive   = true
 }
-
-variable "tfc_agent_pool" {
-  description = "Optional: Terraform Cloud agent pool name. Leave empty if not using a pool."
-  type        = string
-}

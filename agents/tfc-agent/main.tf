@@ -86,7 +86,6 @@ resource "aws_ecs_task_definition" "terraform_agent_task" {
         { name = "AWS_DEFAULT_REGION", value = var.region },
         { name = "TFC_AGENT_TOKEN", value = var.tfc_agent_token },
         { name = "TFC_AGENT_NAME", value = "${var.environment}-${var.region}-agent" },
-        { name = "TFC_AGENT_POOL", value = var.tfc_agent_pool }
       ]
       logConfiguration = {
         logDriver = "awslogs"
