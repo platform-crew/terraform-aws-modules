@@ -76,7 +76,6 @@ resource "aws_ecs_task_definition" "terraform_agent_task" {
       name      = var.container_name
       image     = var.container_image
       essential = true
-      command   = var.container_command
       environment = [
         { name = "AWS_DEFAULT_REGION", value = var.region },
         { name = "TFC_AGENT_TOKEN", value = var.tfc_agent_token },

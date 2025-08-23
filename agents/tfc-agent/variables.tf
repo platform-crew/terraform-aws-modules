@@ -51,12 +51,6 @@ variable "container_name" {
   default     = "terraform"
 }
 
-variable "container_command" {
-  description = "Command to run in the container"
-  type        = list(string)
-  default     = ["sleep", "3600"]
-}
-
 # --------------------
 # Security Group
 # --------------------
