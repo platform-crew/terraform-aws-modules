@@ -17,11 +17,9 @@ resource "aws_security_group" "terraform_agent_sg" {
   }
 
   tags = {
-    Name              = "${var.environment}-terraform-agent-sg"
-    Environment       = var.environment
-    Purpose           = "Terraform Agent"
-    SecurityNote      = "Outbound egress allowed but traffic forced through NAT Gateway. No direct internet exposure."
-    ComplianceJustify = "Terraform agent runs arbitrary code and requires external connectivity; NAT provides control and monitoring."
+    Name        = "${var.environment}-terraform-agent-sg"
+    Environment = var.environment
+    Purpose     = "Terraform Agent"
   }
 }
 
@@ -44,17 +42,14 @@ resource "aws_iam_role" "ecs_task_execution" {
   name = "ecs-task-execution-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Action    = "sts:AssumeRole",
-        Effect    = "Allow",
-        Principal = { Service = "ecs-tasks.amazonaws.com" }
-      }
-    ]
+    Statement = [{
+      Action    = "sts:AssumeRole",
+      Effect    = "Allow",
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
   })
 }
 
-# Attach ECS Task Execution Role Policy
 resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
   role       = aws_iam_role.ecs_task_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -82,7 +77,14 @@ resource "aws_ecs_task_definition" "terraform_agent_task" {
         { name = "TFC_AGENT_NAME", value = "${var.environment}-${var.region}-agent" },
         { name = "TFC_AGENT_POOL", value = var.tfc_agent_pool }
       ]
-      # Optional: add logging here if needed
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/terraform-agent"
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
     }
   ])
 }
@@ -102,6 +104,8 @@ resource "aws_ecs_service" "terraform_agent_service" {
     security_groups  = [aws_security_group.terraform_agent_sg.id]
     assign_public_ip = false
   }
+
+  depends_on = [aws_iam_role_policy_attachment.ecs_execution_policy]
 }
 
 # --------------------
@@ -129,7 +133,7 @@ resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value       = var.cpu_target_value # e.g. 50% CPU
+    target_value       = var.cpu_target_value
     scale_in_cooldown  = 60
     scale_out_cooldown = 60
   }
@@ -149,7 +153,7 @@ resource "aws_appautoscaling_policy" "ecs_memory_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value       = var.memory_target_value # e.g. 60% memory
+    target_value       = var.memory_target_value
     scale_in_cooldown  = 60
     scale_out_cooldown = 60
   }
