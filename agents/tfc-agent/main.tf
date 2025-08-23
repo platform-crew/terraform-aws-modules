@@ -58,6 +58,17 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
 # --------------------
 # ECS Task Definition (Terraform Agent)
 # --------------------
+# Justification: Using AWS-managed encryption (default CloudWatch Logs KMS key) is sufficient for this log group.
+#tfsec:ignore:AVD-AWS-0017
+resource "aws_cloudwatch_log_group" "terraform_agent" {
+  name              = "/ecs/terraform-agent"
+  retention_in_days = 1
+  tags = {
+    Environment = var.environment
+    Purpose     = "Terraform Agent ECS Logs"
+  }
+}
+
 resource "aws_ecs_task_definition" "terraform_agent_task" {
   family                   = "${var.environment}-terraform-agent"
   network_mode             = "awsvpc"
@@ -87,6 +98,8 @@ resource "aws_ecs_task_definition" "terraform_agent_task" {
       }
     }
   ])
+
+  depends_on = [aws_cloudwatch_log_group.terraform_agent]
 }
 
 # --------------------
