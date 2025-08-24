@@ -15,6 +15,7 @@ This repository contains reusable Terraform modules for provisioning AWS infrast
 | [Client VPN](/network/vpn-client) | SSO-integrated AWS Client VPN endpoint with monitoring |
 | [GitHub to ECR](/storage/ecr-git) | Secure image push from GitHub Actions to ECR using OIDC |
 | [Static Website](/storage/s3-staticfiles) | CDN-fronted static hosting with GitHub Actions deployment |
+| [Terraform Agent](/agents/tfc-agent) | Terraform agent to manage infrastructure in private networks |
 
 ## Getting Started
 
